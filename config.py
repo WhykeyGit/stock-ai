@@ -40,7 +40,7 @@ PLOTLY_TEMPLATE = "plotly_white"
 # ==============================
 
 # Where to cache downloaded data (optional)
-DATA_CACHE_PATH = "data/stock_data.parquet"
+DATA_CACHE_PATH = "D:/VSCode/stocksProject/stock-ai/data/cache.parquet"
 
 # Where to save trained models (optional)
 MODEL_SAVE_PATH = "models/"

@@ -6,7 +6,7 @@ Plan van aanpak duidelijker opstellen en opschrijven.
 De geimporteerde data inzien en kijken wat ik met de libraries kan doen. yfinance, pandas, numpy, matplotlib, seaborn etc.
 Vragen bedenken die ik kan stellen aan Ben voor het project. Vragen over de planning.
 
-### yfinance Historical Data Columns
+## yfinance Historical Data Columns
 
 When fetching historical data with `Ticker("AAPL").history()`, the returned DataFrame typically contains the following columns:
 
@@ -17,3 +17,25 @@ When fetching historical data with `Ticker("AAPL").history()`, the returned Data
 - **Adj Close (Adjusted Close)**: The closing price adjusted for corporate actions such as dividends and stock splits.  
   This is the recommended column for comparing prices across time periods.
 - **Volume**: The total number of shares traded during the trading day.
+
+## Prerequisites
+
+- Python 3.8 or higher
+- pip package manager
+
+## Installation
+ **Clone the repository**
+
+### Create a virtual environment (recommended)
+  Windows: 
+   ```python python -m venv venv
+   venv\Scripts\activate
+  ```
+### Install required packages
+```
+pip install -r requirements.txt
+```
+#### or install manually:
+ ```
+ pip install pandas numpy yfinance plotly matplotlib scikit-learn tensorflow pyarrow
+ ```
