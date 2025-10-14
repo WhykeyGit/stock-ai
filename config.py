@@ -11,7 +11,7 @@ TICKERS = [
 ]
 
 # Date range for historical stock data
-START_DATE = "2020-01-01"
+START_DATE = "2015-01-01"
 END_DATE = "2025-01-01"
 
 

@@ -18,11 +18,14 @@ import config
 
 
 class StockData:
-    def __init__(self, tickers=None, start=None, end=None):
-        self.tickers = tickers or config.TICKERS
-        self.start = start or config.START_DATE
-        self.end = end or config.END_DATE
+    def __init__(self, ticker):
+        self.tickers = config.TICKERS
+        self.ticker = ticker
+        self.start =config.START_DATE
+        self.end = config.END_DATE
+
         self.data = None
+        # Data with Daily returns, Rolling volatility, Cumulative returns, Moving averages
         self.processed_data = None
         self.normalized_data = None
         self.data_with_target = None
@@ -87,19 +90,17 @@ class StockData:
     # Feature Engineering
     # ==============================
 
-    def normalize(self):
+    def normalize(self,data):
         """
         Normalizes numerical columns using Min-Max scaling.
         """
-        if self.data is None:
-            raise ValueError("Data must be downloaded before normalization.")
-
-        df = self.data.copy()
+        df = data.copy()
         sc = MinMaxScaler(feature_range=(0,1))
         self.normalized_data = sc.fit_transform(df.drop(columns = ['Date']))
 
         # Convert back to DataFrame for easier handling
         self.normalized_data = pd.DataFrame(self.normalized_data, columns=df.columns[1:])
+        
     def add_indicators(self):
         """
         Computes common financial indicators for each ticker:
@@ -116,14 +117,14 @@ class StockData:
         for ticker in self.tickers:
             close = df[ticker]['Close']
             # Daily return
-            df[f'{ticker}_Return'] = close.pct_change()
+            df['Daily Return'] = close.pct_change()
             # Rolling volatility (annualized)
             df[f'{ticker}_Volatility'] = (
-                df[f'{ticker}_Return'].rolling(window=config.VOLATILITY_WINDOW).std()
+                df['Daily Return'].rolling(window=config.VOLATILITY_WINDOW).std()
                 * np.sqrt(config.TRADING_DAYS_PER_YEAR)
             )
             # Cumulative return
-            df[f'{ticker}_CumulativeReturn'] = (1 + df[f'{ticker}_Return']).cumprod() - 1
+            df[f'{ticker}_CumulativeReturn'] = (1 + df['Daily Return']).cumprod() - 1
 
             # Moving averages
             for window in config.MOVING_AVERAGE_WINDOWS:
@@ -134,11 +135,12 @@ class StockData:
 
     # Function to concatenate the date, stock price, and volume in one dataframe
         # Create a trading window for the next n days
-    def trading_target_window(self):
+    def trading_close_price_target_window(self):
 
+        self.normalize(self.data)
         # 1 day window
         n = 1
-        data = self.normalized_data.copy()
+        data = self.normalized_data.copy()  
         for i in self.tickers:
             print(i)
             data = data.drop(columns=[(i,'Open'),(i,'High'),(i,'Volume'),(i,'Low')])
@@ -149,13 +151,69 @@ class StockData:
         
         # return the new dataset
         self.data_with_target = data[:-1].sort_index(level='Ticker', axis=1)
+
+
+    # Create a trading window of the daily return for the next n days
+    def trading_daily_return_target_window(self):
+
+        # 1 day window
+        n = 1
+        data = self.normalized_data.copy()
+        for i in self.tickers:
+            print(i)
+            data = data.drop(columns=[(i,'Open'),(i,'High'),(i,'Volume'),(i,'Low')])
+
+        # Create a column containing the prices for the next 1 days
+        for i in self.tickers:
+            data[(i,'Target')] = data[(i,"Daily Return")].shift(-n)
+        
+        # return the new dataset
+        self.data_with_target = data[:-1].sort_index(level='Ticker', axis=1)
+
+
     # ==============================
     # train-test split
     # ==============================
-    def train_test_split(self, test_size=0.2):
-        pass
-
-
+    def train_test_split(self, test_size=0.2, sequence_length=1):
+        """
+        Split data for a SINGLE ticker only.
+        """
+        df = self.data_with_target.copy()
+        split_idx = int(len(df) * (1 - test_size))
+        
+        # Extract ONLY this ticker's data
+        close_prices = df[(self.ticker, 'Close')].values
+        target_prices = df[(self.ticker, 'Target')].values
+        
+        # Split into train and test
+        train_close = close_prices[:split_idx]
+        train_target = target_prices[:split_idx]
+        test_close = close_prices[split_idx:]
+        test_target = target_prices[split_idx:]
+        
+        # Create sequences
+        X_train_list = []
+        y_train_list = []
+        for i in range(sequence_length, len(train_close)):
+            X_train_list.append(train_close[i-sequence_length:i])
+            y_train_list.append(train_target[i])
+        
+        X_test_list = []
+        y_test_list = []
+        for i in range(sequence_length, len(test_close)):
+            X_test_list.append(test_close[i-sequence_length:i])
+            y_test_list.append(test_target[i])
+        
+        # Convert to arrays
+        X_train = np.array(X_train_list).reshape(-1, sequence_length, 1)
+        y_train = np.array(y_train_list)
+        X_test = np.array(X_test_list).reshape(-1, sequence_length, 1)
+        y_test = np.array(y_test_list)
+        
+        print(f"Training set for {self.ticker}: X shape {X_train.shape}, y shape {y_train.shape}")
+        print(f"Testing set for {self.ticker}: X shape {X_test.shape}, y shape {y_test.shape}")
+        
+        return X_train, y_train, X_test, y_test
 
     # ==============================
     # Visualization
