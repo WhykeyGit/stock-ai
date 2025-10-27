@@ -1,10 +1,6 @@
 # stock-ai
-A project where AI predicts stock trends based on historic stock data.
-Wat ga ik morgen voor gesprek met Ben doen:
-Concrete planning maken voor de komende week. Een applicatie of iets invullen.
-Plan van aanpak duidelijker opstellen en opschrijven. 
-De geimporteerde data inzien en kijken wat ik met de libraries kan doen. yfinance, pandas, numpy, matplotlib, seaborn etc.
-Vragen bedenken die ik kan stellen aan Ben voor het project. Vragen over de planning.
+A personal project where AI predicts stock trends based on historic stock data.
+Used to practice using various models on stock data.
 
 ## yfinance Historical Data Columns
 
