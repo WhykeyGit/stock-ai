@@ -5,9 +5,9 @@
 # List of stock tickers to analyze
 TICKERS = [
     "NVDA",
-    "ORCL",
-    "MSFT",
-    "AMZN",
+    # "ORCL",
+    # "MSFT",
+    # "AMZN",
 ]
 
 # Date range for historical stock data

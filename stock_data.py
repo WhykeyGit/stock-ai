@@ -23,6 +23,7 @@ class StockData:
         self.end = config.END_DATE
         self.data = None
         self.copy_data = None
+        self.moving_averages_data = None
         self.daily_returns_data = None
         self.normalized_data = None
         self.close_price_target = None
@@ -113,7 +114,17 @@ class StockData:
 
         self.daily_returns_data = df[(ticker,'Daily Return')][1:]  # Skip first NaN row
 
-    
+    def moving_averages(self):
+        """
+        Computes moving averages for each ticker based on config settings
+        """
+        df = self.copy_data
+        for ticker in self.tickers:
+            for window in config.MOVING_AVERAGE_WINDOWS:
+                df[(ticker,f'MA_{window}')] = df[(ticker,'Adj Close')].rolling(window=window).mean()
+        
+        self.moving_averages_data = df
+
 
     # Function to concatenate the date, stock price, and volume in one dataframe
         # Create a trading window for the next n days
