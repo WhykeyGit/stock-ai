@@ -19,13 +19,6 @@ class LSTMModel:
         sd = StockData(ticker=self.ticker)
         sd.download()
         self.data = sd.data
-        # Create trading window for close price target
-        sd.trading_close_price_target_window()
-        # Create trading window for daily return target
-        sd.trading_daily_return_target_window()
-        self.daily_returns_data = sd.daily_returns_data
-        self.close_price_target = sd.close_price_target
-        self.daily_return_target = sd.daily_return_target
 
         # Split data into training and testing sets for daily_return
         self.x_train, self.y_train, self.x_test, self.y_test = sd.train_test_split(test_size=0.2, sequence_length=1, column_name='Daily Return', data=self.daily_return_target)
