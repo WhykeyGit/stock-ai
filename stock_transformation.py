@@ -1,11 +1,12 @@
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MaxAbsScaler
 import os
 
 import config
 
-def normalize(data,ticker):
+def normalize_prices(data,ticker):
         """
         Normalizes numerical columns using Min-Max scaling.
         """
@@ -29,20 +30,60 @@ def daily_returns(data):
         Computes daily returns for each ticker
         """
         df = data.copy()
+        # Calculate returns for ALL tickers
+        returns_dict = {}
         for ticker in config.TICKERS:
-            # Daily return
-            df[(ticker,'Daily Return')] = df[(ticker,'Adj Close')].pct_change()
-
-        return df[(ticker,'Daily Return')][1:]  # Skip first NaN row
-
-
-def moving_averages(data):
-    """
-    Computes moving averages for each ticker based on config settings
-    """
-    df = data.copy()
-    for ticker in config.TICKERS:
-        for window in config.MOVING_AVERAGE_WINDOWS:
-            df[(ticker,f'MA_{window}')] = df[(ticker,'Adj Close')].rolling(window=window).mean()
+            returns_dict[ticker] = df[(ticker, 'Adj Close')].pct_change()
         
-    return df
+        # Create DataFrame from dictionary
+        returns_df = pd.DataFrame(returns_dict)
+        
+        # Remove NaN rows (first row for each ticker)
+        returns_df = returns_df.dropna()
+        
+        return returns_df
+
+def normalize_returns_maxabs(returns_data):
+    """
+    Normalize returns while PRESERVING negative values.
+    Scales to [-1, 1] range.
+    """
+    scaler = MaxAbsScaler()
+    scaled = scaler.fit_transform(returns_data)
+    
+    scaled_df = pd.DataFrame(
+        scaled,
+        columns=returns_data.columns,
+        index=returns_data.index
+    )
+    
+    return scaled_df, scaler
+
+
+def moving_average_50(data):
+    """Compute 50-day moving average for each ticker."""
+    df = data.copy()
+    
+    for ticker in config.TICKERS:
+        df[(ticker, 'MA_50')] = df[(ticker, 'Adj Close')].rolling(
+            window=50
+        ).mean()
+        df = df.dropna(subset=[(ticker, 'MA_50')])
+
+    print(f"Dropped {len(data) - len(df)} rows with NaN values")
+    return df[[(ticker, 'MA_50')
+                for ticker in config.TICKERS]]
+
+def moving_averages_200(data):
+    """Compute 200-day moving average for each ticker."""
+    df = data.copy()
+    
+    for ticker in config.TICKERS:
+        df[(ticker, 'MA_200')] = df[(ticker, 'Adj Close')].rolling(
+            window=200
+        ).mean()
+        df = df.dropna(subset=[(ticker, 'MA_200')])
+
+    print(f"Dropped {len(data) - len(df)} rows with NaN values")
+    return df[[(ticker, 'MA_200')
+                for ticker in config.TICKERS]]

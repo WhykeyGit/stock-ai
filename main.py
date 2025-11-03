@@ -8,10 +8,9 @@ def main():
     sd = StockData()
     sd.download()
     data = sd.data
-    print(data['ORCL'].head())
-    normalized_data, scaler = st.normalize(data,"ORCL")
-    print(normalized_data['ORCL'].nlargest(10,"Adj Close"))
-    print(normalized_data['ORCL'].nsmallest(10,"Adj Close"))
-
+    moving_average_50 = st.moving_average_50(data)
+    moving_average_200 = st.moving_averages_200(data)
+    print(moving_average_50.head())
+    print(moving_average_200.head())
 if __name__ == "__main__":
     main()
