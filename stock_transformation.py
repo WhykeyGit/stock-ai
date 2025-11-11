@@ -87,3 +87,30 @@ def moving_averages_200(data):
     print(f"Dropped {len(data) - len(df)} rows with NaN values")
     return df[[(ticker, 'MA_200')
                 for ticker in config.TICKERS]]
+
+def macd_single_ticker(data):
+
+    df = data.copy()
+     # Calculate the 12-period EMA
+    df['EMA12'] = df['Close'].ewm(span=12, adjust=False).mean()
+    print(df['EMA12'].head())
+    # Calculate the 26-period EMA
+    df['EMA26'] = df['Close'].ewm(span=26, adjust=False).mean()
+    print(df['EMA26'].head())
+    # Calculate MACD (the difference between 12-period EMA and 26-period EMA)
+    df['MACD'] = df['EMA12'] - df['EMA26']
+
+    # Calculate the 9-period EMA of MACD (Signal Line)
+    df['Signal_Line'] = df['MACD'].ewm(span=9, adjust=False).mean()
+
+    df = df[['EMA12','EMA26','MACD','Signal_Line']]
+    # Check for MACD and Signal Line crossovers in the last two rows
+    last_row = df.iloc[-1]
+    second_last_row = df.iloc[-2]
+    if second_last_row['MACD'] > second_last_row['Signal_Line'] and last_row['MACD'] < last_row['Signal_Line']:
+        print('Cross Below Signal Line')
+    elif second_last_row['MACD'] < second_last_row['Signal_Line'] and last_row['MACD'] > last_row['Signal_Line']:
+        print('Cross Above Signal Line')
+    else:
+        print('No Crossover')
+    return df
